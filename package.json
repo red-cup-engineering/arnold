@@ -1,0 +1,58 @@
+{
+  "name": "@red-cup-engineering/arnold",
+  "version": "0.3.0",
+  "type": "module",
+  "description": "Composable cell and tiling terminal interface engine: buffers, diffed ANSI rendering, layout, widgets, focus, and shared terminal lifecycle.",
+  "keywords": [
+    "tui",
+    "terminal",
+    "ansi",
+    "cell",
+    "tiling",
+    "bilattice",
+    "red-cup-engineering"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "arnold": "./scripts/arnold.mjs"
+  },
+  "scripts": {
+    "test": "node --test tests/prove-*.mjs",
+    "demo": "node scripts/arnold.mjs"
+  },
+  "exports": {
+    "./ansi": {
+      "default": "./src/ansi.mjs"
+    },
+    "./buffer": {
+      "default": "./src/buffer.mjs"
+    },
+    "./render": {
+      "default": "./src/render.mjs"
+    },
+    "./layout": {
+      "default": "./src/layout.mjs"
+    },
+    "./widgets": {
+      "default": "./src/widgets.mjs"
+    },
+    "./focus": {
+      "default": "./src/focus.mjs"
+    },
+    "./app": {
+      "default": "./src/app.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "scripts",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "dependencies": {
+    "@red-cup-engineering/terminal-user-interface-engine": "workspace:*"
+  }
+}
