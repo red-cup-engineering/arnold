@@ -53,6 +53,7 @@
   ],
   "sideEffects": false,
   "dependencies": {
-    "@red-cup-engineering/terminal-user-interface-engine": "workspace:*"
-  }
+    "@red-cup-engineering/terminal-user-interface-engine": "0.1.1"
+  },
+  "private": false
 }
