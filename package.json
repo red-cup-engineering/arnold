@@ -3,6 +3,11 @@
   "version": "0.3.0",
   "type": "module",
   "description": "Composable cell and tiling terminal interface engine: buffers, diffed ANSI rendering, layout, widgets, focus, and shared terminal lifecycle.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/computer-systems-engineering-services-section.git",
+    "directory": "services/computer-interface-system-services-section/services/terminal-computer-interface-system-engineering-services-section/services/terminal-cell-interface-engine"
+  },
   "keywords": [
     "tui",
     "terminal",
