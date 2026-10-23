@@ -66,6 +66,58 @@ export class Buffer {
     return this;
   }
 
+  // drawLine — viewport-clipped discrete stroke, adapted from the Bresenham
+  // raster in the retained Tsander wireframe projector (Game Systems legacy,
+  // 2026-09-21). Only grid geometry lives here; world/FOUR semantics do not.
+  // Integer endpoints may be offscreen, but work is bounded by the visible grid.
+  drawLine(row0, col0, row1, col1, ch = "•", style = EMPTY_STYLE) {
+    if (![row0, col0, row1, col1].every(Number.isSafeInteger))
+      throw new TypeError("drawLine requires safe integer grid endpoints");
+    if (typeof ch !== "string" || [...ch].length !== 1 || displayWidth(ch) !== 1)
+      throw new TypeError("drawLine requires one printable terminal cell glyph");
+    const dx = col1 - col0, dy = row1 - row0;
+    if (!Number.isSafeInteger(dx) || !Number.isSafeInteger(dy))
+      throw new RangeError("drawLine endpoint displacement is out of range");
+    if (this.width === 0 || this.height === 0) return this;
+
+    // Clip before rasterization: an offscreen segment cannot consume work
+    // proportional to the distance of its original endpoints.
+    let enter = 0, leave = 1;
+    for (const [p, q] of [
+      [-dx, col0], [dx, this.width - 1 - col0],
+      [-dy, row0], [dy, this.height - 1 - row0],
+    ]) {
+      if (p === 0) {
+        if (q < 0) return this;
+      } else {
+        const t = q / p;
+        if (p < 0) {
+          if (t > leave) return this;
+          enter = Math.max(enter, t);
+        } else {
+          if (t < enter) return this;
+          leave = Math.min(leave, t);
+        }
+      }
+    }
+    const clamp = (n, max) => Math.max(0, Math.min(max, Math.round(n)));
+    let x0 = clamp(col0 + enter * dx, this.width - 1);
+    let y0 = clamp(row0 + enter * dy, this.height - 1);
+    const x1 = clamp(col0 + leave * dx, this.width - 1);
+    const y1 = clamp(row0 + leave * dy, this.height - 1);
+    const stepX = x0 < x1 ? 1 : -1, stepY = y0 < y1 ? 1 : -1;
+    const spanX = Math.abs(x1 - x0), spanY = -Math.abs(y1 - y0);
+    let error = spanX + spanY;
+    for (;;) {
+      this.set(y0, x0, ch, style);
+      if (x0 === x1 && y0 === y1) break;
+      const twice = 2 * error;
+      if (twice >= spanY) { error += spanY; x0 += stepX; }
+      if (twice <= spanX) { error += spanX; y0 += stepY; }
+    }
+    return this;
+  }
+
   // blit — copy another buffer onto this one at (row,col), clipped. Lets layout compose a child
   // region buffer into a parent without the child knowing its absolute position.
   blit(src, row, col) {
