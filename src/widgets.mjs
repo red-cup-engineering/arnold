@@ -21,8 +21,16 @@ export function box(buf, r, opts = {}) {
   buf.set(r.row, right, BORDER.tr, style);
   buf.set(bottom, r.col, BORDER.bl, style);
   buf.set(bottom, right, BORDER.br, style);
-  for (let c = r.col + 1; c < right; c++) { buf.set(r.row, c, BORDER.h, style); buf.set(bottom, c, BORDER.h, style); }
-  for (let row = r.row + 1; row < bottom; row++) { buf.set(row, r.col, BORDER.v, style); buf.set(row, right, BORDER.v, style); }
+  // Reuse the source-recovered grid stroke rather than maintaining four
+  // separate per-cell border loops. Corners are still explicitly owned here.
+  if (right - r.col > 1) {
+    buf.drawLine(r.row, r.col + 1, r.row, right - 1, BORDER.h, style);
+    buf.drawLine(bottom, r.col + 1, bottom, right - 1, BORDER.h, style);
+  }
+  if (bottom - r.row > 1) {
+    buf.drawLine(r.row + 1, r.col, bottom - 1, r.col, BORDER.v, style);
+    buf.drawLine(r.row + 1, right, bottom - 1, right, BORDER.v, style);
+  }
   if (opts.title) {
     const t = ` ${opts.title} `;
     buf.drawText(r.row, r.col + 2, t, opts.titleStyle || style);

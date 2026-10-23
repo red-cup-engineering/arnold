@@ -14,6 +14,19 @@ eq(b.get(3, 9).ch, "┘", "box draws the bottom-right corner");
 ok(b.get(0, 2).ch === " " && b.get(0, 3).ch === "h" && b.get(0, 4).ch === "i", "box draws the title in the top border");
 eq(inner, { row: 1, col: 1, width: 8, height: 2 }, "box returns the inner content rect");
 
+// A 2x2 box has corners only: recovered line strokes must not
+// overwrite corners when there is no horizontal or vertical interior.
+const tiny = new Buffer(2, 2);
+box(tiny, rect(0, 0, 2, 2));
+eq([[tiny.get(0, 0).ch, tiny.get(0, 1).ch],
+    [tiny.get(1, 0).ch, tiny.get(1, 1).ch]],
+  [["┌", "┐"], ["└", "┘"]], "degenerate box retains all four corners");
+const small = new Buffer(3, 3);
+box(small, rect(0, 0, 3, 3));
+eq([small.get(0, 1).ch, small.get(1, 0).ch,
+    small.get(1, 2).ch, small.get(2, 1).ch],
+  ["─", "│", "│", "─"], "small box reuses strokes without border regression");
+
 // wrap breaks on spaces and honors newlines
 eq(wrap("the quick brown", 9), ["the quick", "brown"], "wrap breaks on word boundaries at the width");
 eq(wrap("a\nb", 5), ["a", "b"], "wrap honors embedded newlines");
