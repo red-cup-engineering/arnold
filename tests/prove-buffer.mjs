@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 // prove-buffer — the cell buffer draws, and the DIFF reports exactly the changed cells (the basis
 // of "only redraw what changed").
 
@@ -60,5 +61,47 @@ parent.blit(child, 1, 2);
 ok(parent.get(1, 2).ch === "o" && parent.get(1, 3).ch === "k", "blit copies a child onto the parent at an offset");
 
 ok(cellsEqual(SPACE, SPACE), "SPACE equals itself");
+
+// The discrete line stroke comes from the retained Tsander wireframe
+// rasterizer, but stays in Arnold's domain-neutral cell vocabulary.
+const raster = new Buffer(7, 7);
+const contestedPen = { fg: "yellow", bold: true };
+raster.drawLine(1, 1, 5, 5, "%", contestedPen);
+for (let n = 1; n <= 5; n++) {
+  eq(raster.get(n, n).ch, "%", "recovered diagonal strokes the expected cell");
+  eq(raster.get(n, n).style, contestedPen, "line stroke preserves the caller's pen");
+}
+eq(raster.cells.filter(cell => cell.ch === "%").length, 5, "diagonal is one discrete 5-cell segment");
+
+const clipped = new Buffer(5, 3);
+clipped.drawLine(1, -200000, 1, 200000, "─", { fg: "cyan" });
+eq([...Array(5).keys()].map(col => clipped.get(1, col).ch), ["─", "─", "─", "─", "─"],
+  "far-offscreen horizontal segment clips to five visible columns");
+eq(clipped.cells.filter(cell => cell.ch === "─").length, 5,
+  "clipped line does not write unrelated rows");
+const untouched = new Buffer(5, 3);
+untouched.drawLine(-9, -4, -4, -4, "x");
+eq(diff(new Buffer(5, 3), untouched).changes, [],
+  "fully out-of-view line leaves the receiving frame untouched");
+
+const backwards = new Buffer(4, 4);
+backwards.drawLine(3, 3, 0, 0, "x");
+eq([...Array(4).keys()].map(n => backwards.get(n, n).ch), ["x", "x", "x", "x"],
+  "descending endpoints rasterize in reverse without missing cells");
+const beforeInvalid = new Buffer(3, 3);
+assert.throws(() => beforeInvalid.drawLine(0, 0, 2, 2, "\x1b"),
+  /one printable terminal cell glyph/u);
+assert.throws(() => beforeInvalid.drawLine(0.5, 0, 2, 2, "x"),
+  /safe integer grid endpoints/u);
+assert.throws(() => beforeInvalid.drawLine(0, -9007199254740991, 0, 9007199254740991, "x"),
+  /endpoint displacement is out of range/u);
+eq(diff(new Buffer(3, 3), beforeInvalid).changes, [],
+  "invalid or unsafe strokes refuse before mutating the buffer");
+const repeat = new Buffer(5, 3);
+repeat.drawLine(0, 0, 2, 4, "•");
+const after = new Buffer(5, 3);
+after.drawLine(0, 0, 2, 4, "•");
+eq(diff(repeat, after).changes, [],
+  "repeated raster on the same frame is deterministic and causes no terminal delta");
 
 done("prove-buffer");
