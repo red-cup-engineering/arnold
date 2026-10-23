@@ -15,6 +15,16 @@ It has no domain model. A system provides its own view data and draws it with Ar
 The EAVT settled-section projection is separately available from
 `@red-cup-engineering/eavt-terminal-projectors/cell`.
 
+## Grid lines
+
+`Buffer.drawLine(row0, col0, row1, col1, glyph, style)` paints one
+discrete line in existing terminal buffer cells. It clips offscreen endpoints,
+preserves caller-provided styling, and leaves unrelated cells unchanged.
+
+This reusable grid raster was adapted from the historical Tsander wireframe
+implementation. The live `box` widget now uses it for borders. The library
+does not interpret game state or four-valued evidence.
+
 ## Public modules
 
 | subpath | capability |
